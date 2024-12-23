@@ -43,7 +43,7 @@ frequency: 38000
 duty_cycle: 0.330000
 data: 6447 964 950 3396 931 1000 930 3410 954 975 955 975 955 976 954 3397 957 978 952 962 955 987 956 961 956
 # 
-name: Foward
+name: Forward
 type: raw
 frequency: 38000
 duty_cycle: 0.330000
