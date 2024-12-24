@@ -1,0 +1,75 @@
+#rsupdateapp SCRIPT TO COMPLETE A NORMAL BOOTUP BUT ALSO LOG STARTUP INFO TO FILES ON THE SDCARD
+mkdir /tmp/state
+touch /tmp/state/RSM_CAMERA_BLUE_HIT_VAR
+touch /tmp/state/RSM_CAMERA_GREEN_HIT_VAR
+touch /tmp/state/RSM_CAMERA_HUMAN_HIT_VAR
+touch /tmp/state/RSM_CAMERA_RED_HIT_VAR
+touch /tmp/state/RSM_CAMERA_BLACK_HIT_VAR
+touch /tmp/state/RSM_GAUNTLET_L_I_VAR
+touch /tmp/state/RSM_GAUNTLET_L_O_VAR
+touch /tmp/state/RSM_GAUNTLET_R_I_VAR
+touch /tmp/state/RSM_GAUNTLET_R_O_VAR
+touch /tmp/state/RSM_FOOT_L_B_VAR
+touch /tmp/state/RSM_FOOT_L_F_VAR
+touch /tmp/state/RSM_FOOT_R_B_VAR
+touch /tmp/state/RSM_FOOT_R_F_VAR
+touch /tmp/state/RSM_GRIPPER_R_VAR
+touch /tmp/state/RSM_GRIPPER_L_VAR
+touch /tmp/state/RSM_IR_TRIGGER_L_D_VAR
+touch /tmp/state/RSM_IR_TRIGGER_L_L_VAR
+touch /tmp/state/RSM_IR_TRIGGER_L_R_VAR
+touch /tmp/state/RSM_IR_TRIGGER_S_D_VAR
+touch /tmp/state/RSM_IR_TRIGGER_S_L_VAR
+touch /tmp/state/RSM_IR_TRIGGER_S_R_VAR
+touch /tmp/state/RSM_SOUND_CENTER_VAR
+touch /tmp/state/RSM_SOUND_LEFT_VAR
+touch /tmp/state/RSM_SOUND_RIGHT_VAR
+touch /tmp/state/AUTOTRACK_POSITION_VAR
+touch /tmp/state/BC_AUDIOPLAYER_VAR
+touch /tmp/state/BC_IMAGEVIEWER_VAR
+touch /tmp/state/BC_TAKEMOVIE_VAR
+touch /tmp/state/BC_VIDEOPLAYER_VAR
+touch /tmp/state/BC_AUTOTRACK_VAR
+touch /tmp/state/BC_JAVA_VAR
+touch /tmp/state/BC_TAKEPICTURE_VAR
+touch /tmp/state/mp3_state
+touch /tmp/state/sleep_state
+touch /tmp/curvol
+touch /tmp/state/scriptrun
+touch /tmp/state/linein_state
+touch /tmp/state/usb_state
+
+dmesg > /tmp/dmesg1.txt
+
+echo ***rsupdateapp - starting /usr/bin/robot/run.sh**
+/usr/bin/robot/init_sd.sh
+
+#Helibot - Instead of calling the default run.sh we use the commands below to start
+# all the same programs but redirect their std and error output to a file.
+. /usr/bin/robot/init.sh.ff
+/usr/bin/robot/nano-X -p > /tmp/nanox.log 2<&1 &
+/usr/bin/robot/mediadaemon >> /tmp/medaidaemon.log 2<&1 &
+/usr/bin/robot/start_robot_main >> /tmp/robot_main.log 2<&1 &
+/usr/bin/robot/main_ui >> /tmp/main_ui.log 2<&1 &
+
+if [ -f /tmp/SD_EXIST ]; then
+	/bin/mount /dev/mmc /mnt/sd -o ro,remount
+else
+	/bin/mount /dev/nand3 /mnt/sd -o ro,remount
+fi
+
+#Finially we wait for a while for all programs to start
+sleep 30
+#now copy the log files to the sdcard
+/bin/mount /dev/mmc /mnt/sd -o rw,remount
+cp /tmp/dmesg1.txt /mnt/sd
+sync
+dmesg > /mnt/sd/dmesg2.txt
+sync
+cp /tmp/*.log /mnt/sd/
+sync
+/bin/mount /dev/mmc /mnt/sd -o ro,remount
+
+#When this script finishes the /etc/profile will go into a forever loop.
+#So lets start another shell for the console.
+sh
